@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#071512"><title>APKFORGE — Android Build Workspace</title>
+<style>
+:root{color-scheme:dark;--bg:#071512;--panel:#0d211c;--line:#1d4035;--mint:#64f0bd;--muted:#9ab8ac}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 75% -20%,#174737 0,transparent 45%),var(--bg);color:#effff8;font:15px Inter,system-ui,sans-serif}
+header{padding:24px clamp(18px,5vw,64px);border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:16px}
+.logo{font-weight:900;letter-spacing:.12em;font-size:19px}.logo span{color:var(--mint)}.tag{color:var(--muted);font-size:12px}
+main{max-width:1100px;margin:38px auto;padding:0 20px}.hero{margin-bottom:28px}.eyebrow{color:var(--mint);font-size:11px;letter-spacing:.2em;font-weight:800}.hero h1{font-size:clamp(32px,6vw,58px);margin:10px 0}.hero p{color:var(--muted);max-width:680px;line-height:1.6}
+.grid{display:grid;grid-template-columns:1.2fr .8fr;gap:18px}.panel{background:linear-gradient(145deg,#102820,#0a1b17);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 18px 60px #0003}.panel h2{font-size:17px;margin:0 0 8px}.sub{color:var(--muted);font-size:13px;line-height:1.5}
+.drop{margin:20px 0;border:1px dashed #4b8b74;border-radius:14px;padding:32px 18px;text-align:center;background:#071b15;cursor:pointer}.drop strong{display:block;font-size:16px;margin:8px}.drop small{color:var(--muted)}input[type=file]{display:none}
+button{border:0;background:var(--mint);color:#062016;font-weight:800;border-radius:10px;padding:12px 16px;cursor:pointer}button.secondary{background:#17382d;color:#dfffee;border:1px solid #315c4b}
+.metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:14px}.metric{padding:14px;border:1px solid var(--line);border-radius:12px}.metric b{display:block;font-size:20px;margin-top:5px}.metric span{font-size:11px;color:var(--muted)}
+.status{margin-top:16px;padding:14px;border-radius:12px;background:#071b15;border:1px solid var(--line);white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;color:#c8e8da}
+.steps{display:grid;gap:12px;margin-top:18px}.step{display:flex;gap:12px;align-items:flex-start}.num{width:28px;height:28px;border-radius:9px;background:#174332;color:var(--mint);display:grid;place-items:center;font-weight:900;flex:none}
+footer{max-width:1100px;margin:30px auto;padding:20px;color:var(--muted);font-size:12px;border-top:1px solid var(--line)}
+@media(max-width:760px){.grid{grid-template-columns:1fr}header{align-items:flex-start;flex-direction:column}.panel{padding:18px}}
+</style></head>
+<body>
+<header><div class="logo">APK<span>FORGE</span></div><div class="tag">ANDROID BUILD WORKSPACE · v1.0.3</div></header>
+<main>
+<section class="hero"><div class="eyebrow">01 / PACKAGE INSPECTOR</div><h1>Know your APK<br>before you install it.</h1><p>Inspect an Android package locally. APKFORGE checks the file signature, ZIP structure, size and SHA-256 fingerprint in your browser. Your selected file is not uploaded.</p></section>
+<div class="grid">
+<section class="panel">
+<h2>APK package intake</h2><div class="sub">Select an existing .apk file to run local structural checks.</div>
+<label class="drop" for="apk"><div style="font-size:30px">⇧</div><strong>Choose an APK file</strong><small>Android package · .apk · processed on this device</small></label>
+<input id="apk" type="file" accept=".apk,application/vnd.android.package-archive,application/zip">
+<button id="inspect">Inspect selected APK</button> <button class="secondary" id="clear">Clear</button>
+<div class="status" id="status" aria-live="polite">Waiting for an APK. No file has been selected.</div>
+<div class="metrics"><div class="metric"><span>FILE SIZE</span><b id="size">—</b></div><div class="metric"><span>SHA-256</span><b id="hash" style="font-size:12px;overflow-wrap:anywhere">—</b></div></div>
+</section>
+<aside class="panel">
+<h2>Build pipeline</h2><div class="sub">APKFORGE Android companion is built through GitHub Actions after the project is pushed to your repository.</div>
+<div class="steps">
+<div class="step"><div class="num">1</div><div><b>Prepare source</b><div class="sub">Add your Android project and resources.</div></div></div>
+<div class="step"><div class="num">2</div><div><b>Compile Android app</b><div class="sub">Run the included Android build workflow.</div></div></div>
+<div class="step"><div class="num">3</div><div><b>Download build artifact</b><div class="sub">Get the generated debug APK from the workflow run.</div></div></div>
+</div>
+<div class="status">TEST APK #001\nDLS26\nAwaiting the original test APK file from the project owner.</div>
+</aside></div>
+</main>
+<footer>APKFORGE is a package-inspection utility, not a malware scanner. A valid ZIP/APK signature does not prove an app is safe. Only install APKs from sources you trust.</footer>
+<script>
+const fileInput=document.getElementById('apk'), statusBox=document.getElementById('status');
+let selected=null;
+fileInput.addEventListener('change',()=>{selected=fileInput.files[0]||null;statusBox.textContent=selected?`Selected: ${selected.name}\nReady for inspection.`:'No file selected.'});
+const fmt=n=>n<1024?`${n} B`:n<1048576?`${(n/1024).toFixed(1)} KB`:`${(n/1048576).toFixed(2)} MB`;
+document.getElementById('inspect').addEventListener('click',async()=>{
+ if(!selected){statusBox.textContent='Choose an APK first.';return}
+ document.getElementById('size').textContent=fmt(selected.size);document.getElementById('hash').textContent='Calculating…';
+ try{
+  const bytes=await selected.arrayBuffer(), view=new DataView(bytes);
+  const zip=view.byteLength>=4&&view.getUint32(0,true)===0x04034b50;
+  const digest=await crypto.subtle.digest('SHA-256',bytes);
+  const hash=[...new Uint8Array(digest)].map(x=>x.toString(16).padStart(2,'0')).join('');
+  document.getElementById('hash').textContent=hash;
+  const apkName=selected.name.toLowerCase().endsWith('.apk');
+  const checks=[`Filename ends in .apk: ${apkName?'PASS':'FAIL'}`,`ZIP local-file header: ${zip?'PASS':'FAIL'}`,`Non-empty file: ${selected.size>0?'PASS':'FAIL'}`,`SHA-256: ${hash}`];
+  statusBox.textContent=`INSPECTION COMPLETE\n${checks.join('\n')}\n\n${apkName&&zip&&selected.size>0?'Basic structure looks like an APK/ZIP. This is not a safety or installability certification.':'This file failed one or more basic checks.'}`;
+ }catch(e){statusBox.textContent='Inspection failed: '+e.message}
+});
+document.getElementById('clear').addEventListener('click',()=>{fileInput.value='';selected=null;statusBox.textContent='Waiting for an APK. No file has been selected.';document.getElementById('size').textContent='—';document.getElementById('hash').textContent='—'});
+</script></body></html>
